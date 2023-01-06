@@ -1,0 +1,20 @@
+{
+  "auth" : "cpan:ANATOFUZ",
+  "authors" : [
+    "AnaTofuZ"
+  ],
+  "build-depends" : [ ],
+  "depends" : [ ],
+  "description" : "blah blah blah",
+  "license" : "Artistic-2.0",
+  "name" : "Abyss::Server",
+  "perl" : "6.c",
+  "provides" : {
+    "Abyss::Server" : "lib/Abyss/Server.pm6"
+  },
+  "resources" : [ ],
+  "source-url" : "",
+  "tags" : [ ],
+  "test-depends" : [ ],
+  "version" : "0.0.1"
+}
