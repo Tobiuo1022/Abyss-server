@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
         perror("connect error");
         if (close(socket_fd) < 0) {
             perror("close");
-            return 2;
         }
+        return 1;
     }
 
     // make the message. 
@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
         perror("send error");
         if (close(socket_fd) < 0) {
             perror("close error");
-            return 2;
         }
+        return 1;
     }
 
     // Receive a message.
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     // close a socket. 
     if (close(socket_fd) < 0) {
         perror("close error");
-        return 2;
+        return 1;
     }
    
     return 0;
