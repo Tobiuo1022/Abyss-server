@@ -27,7 +27,7 @@ method readeval {
         my $dir = @message[0];
         chdir $dir;
 
-        my $path = @message[1].IO;
+        my $path = @message[1].IO.absolute;
 
         if fork() -> $pid {
             $conn.close;
