@@ -38,13 +38,25 @@ int main(int argc, char *argv[]) {
     // make the message. 
     char cwd[PATHSIZE];
     getcwd(cwd, sizeof cwd);
-    char message[strlen(cwd) + 1 + strlen(argv[1]) + 1];
+
+    char *tty;
+    if ((tty = ttyname(1)) == NULL) {
+        perror("ttyname error");
+        return 1;
+    }
+
+    char *filepath = argv[1];
+
+    char message[strlen(cwd) + 1 + strlen(tty) + 1 + strlen(argv[1]) + 1];
     char *p = message;
     strncpy(p, cwd, strlen(cwd));
     p += strlen(cwd);
     *p++ = '\n';
-    strncpy(p, argv[1], strlen(argv[1]));
-    p += strlen(argv[1]);
+    strncpy(p, tty, strlen(tty));
+    p += strlen(tty);
+    *p++ = '\n';
+    strncpy(p, filepath, strlen(filepath));
+    p += strlen(filepath);
     *p++ = 0;
 
     // Send a message.
@@ -57,18 +69,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Receive a message.
-    char *buf;
-    buf = (char*)calloc(BUFSIZE, sizeof(char));
+    // Receive a done message.
+    char *buf = (char*)calloc(BUFSIZE, sizeof(char));
     int read_len;
-    while ((read_len = read(socket_fd, buf, sizeof(buf))) > 0) {
-        write(1, buf, read_len);
-    } 
-    if (read_len < 0) {
+    if ((read_len = read(socket_fd, buf, sizeof(buf))) < 0) {
         fprintf(stderr, "read error\n");
     }
     free(buf);
-   
+
     // close a socket. 
     if (close(socket_fd) < 0) {
         perror("close error");
