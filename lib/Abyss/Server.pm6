@@ -23,19 +23,24 @@ method readeval {
         my $dir = @message[0];
         chdir $dir;
 
-        my $ttyname = @message[1];
-        my $ttyh = open $ttyname, :rw;
+        my $path = @message[1].IO.absolute;
 
-        my $path = @message[2].IO.absolute;
+        my $in_file = @message[2];
+        my $inh = open $in_file, :r;
+        my $out_file = @message[3];
+        my $outh = open $out_file, :a;
+        my $err_file = @message[4];
+        my $errh = open $err_file, :a;
+
 
         if fork() -> $pid {
             $conn.close;
             waitpid($pid, my int32 $wstatus, 0);
         } else {
             say "evaling "~$path;
-            $*IN = $ttyh;
-            $*OUT = $ttyh;
-            $*ERR = $ttyh;
+            $*IN = $inh;
+            $*OUT = $outh;
+            $*ERR = $errh;
 
             EVALFILE $path;
             exit(1);

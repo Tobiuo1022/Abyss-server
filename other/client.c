@@ -39,25 +39,49 @@ int main(int argc, char *argv[]) {
     char cwd[PATHSIZE];
     getcwd(cwd, sizeof cwd);
 
-    char *tty;
-    if ((tty = ttyname(1)) == NULL) {
-        perror("ttyname error");
-        return 1;
-    }
-
     char *filepath = argv[1];
 
-    char message[strlen(cwd) + 1 + strlen(tty) + 1 + strlen(argv[1]) + 1];
+    char stdin_file[PATHSIZE + 1];
+    int stdin_file_len;
+    if ((stdin_file_len = readlink("/proc/self/fd/0", stdin_file, sizeof(stdin_file))) < 0) {
+        perror("readlink error");
+        return 1;
+    }
+    stdin_file[stdin_file_len] = '\0';
+
+    char stdout_file[PATHSIZE + 1];
+    int stdout_file_len;
+    if ((stdout_file_len = readlink("/proc/self/fd/1", stdout_file, sizeof(stdout_file))) < 0) {
+        perror("readlink error");
+        return 1;
+    }
+    stdout_file[stdout_file_len] = '\0';
+
+    char stderr_file[PATHSIZE + 1];
+    int stderr_file_len;
+    if ((stderr_file_len = readlink("/proc/self/fd/2", stderr_file, sizeof(stderr_file))) < 0) {
+        perror("readlink error");
+        return 1;
+    }
+    stderr_file[stderr_file_len] = '\0';
+
+    char message[strlen(cwd) + 1 + strlen(filepath) + 1 + stdin_file_len + 1 + stdout_file_len + 1 + stderr_file_len + 1];
     char *p = message;
     strncpy(p, cwd, strlen(cwd));
     p += strlen(cwd);
     *p++ = '\n';
-    strncpy(p, tty, strlen(tty));
-    p += strlen(tty);
-    *p++ = '\n';
     strncpy(p, filepath, strlen(filepath));
     p += strlen(filepath);
-    *p++ = 0;
+    *p++ = '\n';
+    strncpy(p, stdin_file, stdin_file_len);
+    p += stdin_file_len;
+    *p++ = '\n';
+    strncpy(p, stdout_file, stdout_file_len);
+    p += stdout_file_len;
+    *p++ = '\n';
+    strncpy(p, stderr_file, stderr_file_len);
+    p += stderr_file_len;
+    *p++ = '\n';
 
     // Send a message.
     int send_len;
