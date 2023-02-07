@@ -49,23 +49,7 @@ int main(int argc, char *argv[]) {
     }
     stdin_file[stdin_file_len] = '\0';
 
-    char stdout_file[PATHSIZE + 1];
-    int stdout_file_len;
-    if ((stdout_file_len = readlink("/proc/self/fd/1", stdout_file, sizeof(stdout_file))) < 0) {
-        perror("readlink error");
-        return 1;
-    }
-    stdout_file[stdout_file_len] = '\0';
-
-    char stderr_file[PATHSIZE + 1];
-    int stderr_file_len;
-    if ((stderr_file_len = readlink("/proc/self/fd/2", stderr_file, sizeof(stderr_file))) < 0) {
-        perror("readlink error");
-        return 1;
-    }
-    stderr_file[stderr_file_len] = '\0';
-
-    char message[strlen(cwd) + 1 + strlen(filepath) + 1 + stdin_file_len + 1 + stdout_file_len + 1 + stderr_file_len + 1];
+    char message[strlen(cwd) + 1 + strlen(filepath) + 1 + stdin_file_len + 1];
     char *p = message;
     strncpy(p, cwd, strlen(cwd));
     p += strlen(cwd);
@@ -75,12 +59,6 @@ int main(int argc, char *argv[]) {
     *p++ = '\n';
     strncpy(p, stdin_file, stdin_file_len);
     p += stdin_file_len;
-    *p++ = '\n';
-    strncpy(p, stdout_file, stdout_file_len);
-    p += stdout_file_len;
-    *p++ = '\n';
-    strncpy(p, stderr_file, stderr_file_len);
-    p += stderr_file_len;
     *p++ = '\n';
 
     // Send a message.
@@ -93,14 +71,18 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Receive a done message.
-    char *buf = (char*)calloc(BUFSIZE, sizeof(char));
+    // Receive a message.
+    char *buf;
+    buf = (char*)calloc(BUFSIZE, sizeof(char));
     int read_len;
-    if ((read_len = read(socket_fd, buf, sizeof(buf))) < 0) {
+    while ((read_len = read(socket_fd, buf, sizeof(buf))) > 0) {
+        write(1, buf, read_len);
+    } 
+    if (read_len < 0) {
         fprintf(stderr, "read error\n");
     }
     free(buf);
-
+   
     // close a socket. 
     if (close(socket_fd) < 0) {
         perror("close error");

@@ -3,6 +3,8 @@ unit class Abyss::Server:ver<0.0.1>:auth<cpan:ANATOFUZ>;
 use NativeCall;
 use MONKEY-SEE-NO-EVAL;
 
+sub dup(int32 $old) returns int32 is native { ... }
+sub dup2(int32 $new, int32 $old) returns int32 is native { ... }
 sub fork() returns int32 is native { ... }
 sub waitpid(int32 $pid, int32 $wstatus is rw, int32 $option) returns int32 is native { ... }
 
@@ -13,6 +15,8 @@ method readeval {
                                        :family(PF_INET));
 
     say DateTime.now;
+    my $stdout = dup(1);
+    my $stderr = dup(2);
 
     loop {
         # Receive the message. 
@@ -26,23 +30,19 @@ method readeval {
         my $path = @message[1].IO.absolute;
 
         my $in_file = @message[2];
-        my $inh = open $in_file, :r;
-        my $out_file = @message[3];
-        my $outh = open $out_file, :a;
-        my $err_file = @message[4];
-        my $errh = open $err_file, :a;
-
 
         if fork() -> $pid {
             $conn.close;
             waitpid($pid, my int32 $wstatus, 0);
         } else {
             say "evaling "~$path;
+            my $inh = open $in_file, :r;
             $*IN = $inh;
-            $*OUT = $outh;
-            $*ERR = $errh;
+            dup2($conn.native-descriptor(), 1);
+            dup2($conn.native-descriptor(), 2);
 
             EVALFILE $path;
+            
             exit(1);
         }
     }
